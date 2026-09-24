@@ -1,6 +1,10 @@
 """    uvicorn api_server:app --host 0.0.0.0 --port 8001 --reload
 """
 
+import os
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
+
 import logging
 import uuid
 from typing import Optional
