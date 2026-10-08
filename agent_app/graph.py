@@ -95,4 +95,3 @@ def build_graph(checkpointer=None):
 # Module-level default: uncheckpointed, single-shot use (e.g. tests,
 # one-off scripts). The API server builds its own checkpointed instance.
 graph = build_graph()
-graph.get_graph().draw_mermaid()

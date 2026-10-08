@@ -12,7 +12,7 @@ from typing import Annotated, Optional
 from zoneinfo import ZoneInfo
 
 from langchain_core.tools import tool
-from langchain.tools import ToolRuntime
+from langgraph.prebuilt import InjectedState
 from psycopg import sql
 from pydantic import Field
 
@@ -63,14 +63,13 @@ def _require_installation_id(state: GraphState) -> Optional[int]:
 # --------------------------------------------------------------------------
 
 @tool("get_latest_reading")
-def get_latest_reading(runtime: ToolRuntime) -> str:
+def get_latest_reading(state: Annotated[GraphState, InjectedState]) -> str:
     """Get the single most recent solar/weather reading row for the
     admin's currently selected installation.
 
     Use this for "what's happening right now" questions: current power
     output, current weather, current daily yield, etc.
     """
-    state: GraphState = runtime.state
     installation_id = _require_installation_id(state)
     if installation_id is None:
         return "No installation selected yet."
@@ -95,7 +94,7 @@ def get_latest_reading(runtime: ToolRuntime) -> str:
 def get_readings_in_range(
     start_ts: Annotated[str, Field(description="Start of range, ISO 8601, e.g. 2026-09-20T00:00:00Z")],
     end_ts: Annotated[str, Field(description="End of range, ISO 8601, e.g. 2026-09-21T00:00:00Z")],
-    runtime: ToolRuntime,
+    state: Annotated[GraphState, InjectedState],
     limit: Annotated[int, Field(description="Max rows to return, capped at 5000.")] = 500,
 ) -> str:
     """Fetch readings between two timestamps (inclusive) for the admin's
@@ -104,7 +103,6 @@ def get_readings_in_range(
     Use this to build a time series for analysis, charting, or as the
     feature/history window fed into the ARX / XGBoost forecast tool.
     """
-    state: GraphState = runtime.state
     installation_id = _require_installation_id(state)
     if installation_id is None:
         return "No installation selected yet."
@@ -156,7 +154,7 @@ def run_readonly_sql(
             )
         ),
     ],
-    runtime: ToolRuntime,
+    state: Annotated[GraphState, InjectedState],
 ) -> str:
     """Run a read-only SQL SELECT against the solar/weather table, scoped
     to the admin's currently selected installation.
@@ -174,7 +172,6 @@ def run_readonly_sql(
     POSTGRES_DSN at a read-only user in production for real defense in
     depth.
     """
-    state: GraphState = runtime.state
     installation_id = _require_installation_id(state)
     if installation_id is None:
         return "No installation selected yet."
